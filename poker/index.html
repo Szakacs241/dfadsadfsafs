@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Egyszerű Poker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: green;
+      margin: 0;
+    }
+
+    #game {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 10px;
+      width: 60%;
+      height: 80vh;
+    }
+
+    .dealer, .player {
+      border: 1px solid white;
+      padding: 10px;
+      background-color: #1c5d99;
+      color: white;
+      text-align: center;
+    }
+
+    .dealer {
+      grid-column: 2;
+    }
+
+    .player-left {
+      grid-row: 2;
+    }
+
+    .player-right {
+      grid-row: 2;
+      grid-column: 3;
+    }
+
+    .player-bottom {
+      grid-column: 2;
+      grid-row: 4;
+    }
+
+    #table {
+      grid-column: 2;
+      grid-row: 3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #table .cards {
+      display: flex;
+      gap: 10px;
+    }
+
+    .controls {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    button {
+      padding: 10px;
+      margin: 5px;
+      background-color: #ffcc00;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #ff9900;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div class="dealer">Dealer: 5000 Ft</div>
+    <div class="player player-left">Játékos 1: 5000 Ft</div>
+    <div class="player player-right">Játékos 2: 5000 Ft</div>
+    <div class="player player-bottom">Te: 5000 Ft</div>
+    <div id="table">
+      <div class="cards"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="raise">Emel</button>
+    <button id="fold">Dob</button>
+    <button id="call">Tart</button>
+    <button id="check">Passzol</button>
+  </div>
+
+  <script>
+    const playerNames = ["Béla", "Ferenc", "János"];
+    let playerFunds = [5000, 5000, 5000, 5000];
+    let playerHands = [[], [], [], []];
+    let tableCards = [];
+    let pot = 0;
+
+    function getRandomCard(count) {
+      return fetch("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1")
+        .then(response => response.json())
+        .then(data => fetch(`https://deckofcardsapi.com/api/deck/${data.deck_id}/draw/?count=${count}`))
+        .then(response => response.json());
+    }
+
+    function displayPlayerCards() {
+      const playerBottom = document.querySelector(".player-bottom");
+      playerBottom.innerHTML = `Te: 5000 Ft<br>`;
+      playerHands[3].forEach(card => {
+        const img = document.createElement("img");
+        img.src = card.image;
+        playerBottom.appendChild(img);
+      });
+    }
+
+    function displayTableCards() {
+      const table = document.querySelector("#table .cards");
+      table.innerHTML = '';
+      tableCards.forEach(card => {
+        const img = document.createElement("img");
+        img.src = card.image;
+        table.appendChild(img);
+      });
+    }
+
+    function startGame() {
+      getRandomCard(8).then(cards => {
+        playerHands[0] = cards.cards.slice(0, 2);
+        playerHands[1] = cards.cards.slice(2, 4);
+        playerHands[2] = cards.cards.slice(4, 6);
+        playerHands[3] = cards.cards.slice(6, 8);
+        displayPlayerCards();
+      });
+    }
+
+    function nextRound() {
+      getRandomCard(5).then(cards => {
+        tableCards = cards.cards.slice(0, 3);
+        displayTableCards();
+      });
+    }
+
+    function fourthCard() {
+      getRandomCard(1).then(cards => {
+        tableCards.push(cards.cards[0]);
+        displayTableCards();
+      });
+    }
+
+    function fifthCard() {
+      getRandomCard(1).then(cards => {
+        tableCards.push(cards.cards[0]);
+        displayTableCards();
+      });
+    }
+
+    function dealerWinner() {
+      alert("A dealer nyert, és megkapja a tétet!");
+    }
+
+    document.getElementById("raise").addEventListener("click", () => {
+      pot += Math.floor(Math.random() * 1000) + 100;
+      alert(`Emeltél! A pot most: ${pot} Ft`);
+    });
+
+    document.getElementById("fold").addEventListener("click", () => {
+      alert("Dobtál!");
+    });
+
+    document.getElementById("call").addEventListener("click", () => {
+      pot += Math.floor(Math.random() * 1000) + 100;
+      alert(`Tartottál! A pot most: ${pot} Ft`);
+    });
+
+    document.getElementById("check").addEventListener("click", () => {
+      alert("Passzoltál!");
+    });
+
+    startGame();
+    setTimeout(() => {
+      nextRound();
+      setTimeout(() => {
+        fourthCard();
+        setTimeout(() => {
+          fifthCard();
+          setTimeout(() => {
+            dealerWinner();
+          }, 3000);
+        }, 3000);
+      }, 3000);
+    }, 5000);
+  </script>
+</body>
+</html>

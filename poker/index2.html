@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Texas Hold'Em Poker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2a5d2c;
+            color: white;
+            text-align: center;
+        }
+        .card {
+            width: 50px;
+            height: 70px;
+            margin: 5px;
+            border: 1px solid white;
+            display: inline-block;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #ffcc00;
+            border: none;
+        }
+        button:hover {
+            background-color: #ff9900;
+        }
+    </style>
+</head>
+<body>
+    <h1>Texas Hold'Em Poker</h1>
+    <div id="game">
+        <div id="player-cards"></div>
+        <div id="table-cards"></div>
+    </div>
+    <div id="controls">
+        <button id="start-game">Játék Indítása</button>
+        <button id="call">Hívás</button>
+        <button id="raise">Emelés</button>
+        <button id="fold">Dobás</button>
+        <button id="check">Passzolás</button>
+    </div>
+    
+    <script>
+        let deckId;
+        let playerCards = [];
+        let tableCards = [];
+        let currentBet = 0;
+
+        // Pakli létrehozása
+        function fetchDeck() {
+            return fetch("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1")
+                .then(response => response.json())
+                .then(data => {
+                    deckId = data.deck_id;
+                    return deckId;
+                });
+        }
+
+        // Kártyák húzása
+        function drawCards(count) {
+            return fetch(`https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=${count}`)
+                .then(response => response.json())
+                .then(data => {
+                    return data.cards;
+                });
+        }
+
+        // Játék indítása
+        function startGame() {
+            fetchDeck().then(() => {
+                drawCards(2).then(cards => {
+                    playerCards = cards;
+                    displayPlayerCards();
+                });
+                drawCards(5).then(cards => {
+                    tableCards = cards;
+                    displayTableCards();
+                });
+            });
+        }
+
+        // Játékos kártyák megjelenítése
+        function displayPlayerCards() {
+            const playerCardsDiv = document.getElementById("player-cards");
+            playerCardsDiv.innerHTML = "Te kártyáid: ";
+            playerCards.forEach(card => {
+                const img = document.createElement("img");
+                img.src = card.image;
+                img.className = "card";
+                playerCardsDiv.appendChild(img);
+            });
+        }
+
+        // Közös kártyák megjelenítése
+        function displayTableCards() {
+            const tableCardsDiv = document.getElementById("table-cards");
+            tableCardsDiv.innerHTML = "Közös kártyák: ";
+            tableCards.forEach(card => {
+                const img = document.createElement("img");
+                img.src = card.image;
+                img.className = "card";
+                tableCardsDiv.appendChild(img);
+            });
+        }
+
+        // Gombok eseménykezelők
+        document.getElementById("start-game").addEventListener("click", startGame);
+        document.getElementById("call").addEventListener("click", () => {
+            alert("Hívás történt!");
+        });
+        document.getElementById("raise").addEventListener("click", () => {
+            const raiseAmount = parseInt(prompt("Mennyit szeretnél emelni?"), 10);
+            currentBet += raiseAmount;
+            alert(`Emeltél ${raiseAmount} Ft-t!`);
+        });
+        document.getElementById("fold").addEventListener("click", () => {
+            alert("Dobtál!");
+        });
+        document.getElementById("check").addEventListener("click", () => {
+            alert("Passzoltál!");
+        });
+    </script>
+</body>
+</html>
